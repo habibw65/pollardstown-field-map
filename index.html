@@ -1323,22 +1323,26 @@ svg.leaflet-image-layer.leaflet-interactive path {
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html, body { width: 100%; height: 100%; overflow: hidden; }
-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; background: #f5f5f5; }
-#map { position: absolute; inset: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; }
 
-/* ── PANELS (Dublin-style, light theme) ─────────────────────── */
-#panels {
-  position: absolute; top: 10px; right: 10px; z-index: 1000;
-  width: 280px; display: flex; flex-direction: column; gap: 8px;
-  pointer-events: auto;
-}
-.panel {
+/* map is always full-bleed */
+#map { position: absolute; inset: 0; z-index: 0; }
+
+/* ── GLASS MIXIN ────────────────────────────────────────────── */
+.glass {
   background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 10px; overflow: hidden;
-  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.10), 0 0 0 1px rgba(0,0,0,0.03);
+  box-shadow: 0 2px 16px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.03);
 }
+
+/* ── DESKTOP: right sidebar panels ──────────────────────────── */
+#sidebar {
+  position: absolute; top: 10px; right: 10px; z-index: 1000;
+  width: 272px; display: flex; flex-direction: column; gap: 8px;
+}
+
+.panel { border-radius: 10px; overflow: hidden; }
 .panel-header {
   display: flex; justify-content: space-between; align-items: center;
   padding: 10px 14px; cursor: pointer; user-select: none;
@@ -1360,40 +1364,57 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Ar
 .panel-body p:last-child { margin-bottom: 0; }
 .panel-body strong { color: rgba(0, 0, 0, 0.80); }
 
-/* ── LEGEND ─────────────────────────────────────────────────── */
-.legend-grid { display: grid; grid-template-columns: 1fr; gap: 1px; }
-.legend-row {
-  display: flex; align-items: center; gap: 8px; padding: 3px 0;
+/* ── MOBILE: bottom sheet ───────────────────────────────────── */
+#sheet {
+  display: none; /* hidden on desktop, shown via media query */
+  position: absolute; bottom: 0; left: 0; right: 0; z-index: 1000;
+  border-radius: 16px 16px 0 0;
+  max-height: 55vh;
+  transition: transform 0.3s ease;
 }
+#sheet.collapsed { transform: translateY(calc(100% - 44px)); }
+#sheet-handle {
+  height: 44px; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent;
+}
+#sheet-handle::before {
+  content: ''; width: 36px; height: 4px; border-radius: 2px;
+  background: rgba(0,0,0,0.18);
+}
+#sheet-scroll {
+  overflow-y: auto; -webkit-overflow-scrolling: touch;
+  max-height: calc(55vh - 44px); padding: 0 16px 20px;
+}
+.sheet-section { margin-bottom: 14px; }
+.sheet-heading {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; color: rgba(0,0,0,0.40);
+  margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px solid rgba(0,0,0,0.06);
+}
+
+/* ── SHARED COMPONENTS ──────────────────────────────────────── */
+.legend-row { display: flex; align-items: center; gap: 8px; padding: 3px 0; }
 .legend-swatch {
   width: 14px; height: 14px; border-radius: 4px; flex-shrink: 0;
   border: 1px solid rgba(0,0,0,0.10);
 }
 .legend-lbl { font-size: 11.5px; color: rgba(0,0,0,0.65); }
 
-/* ── LAYER TOGGLES ──────────────────────────────────────────── */
 .layer-toggle {
   display: flex; align-items: center; gap: 8px; padding: 5px 0;
   cursor: pointer; user-select: none;
 }
 .layer-toggle input[type="checkbox"] {
-  width: 15px; height: 15px; accent-color: #1b9e77; cursor: pointer;
-  flex-shrink: 0;
+  width: 16px; height: 16px; accent-color: #1b9e77; cursor: pointer; flex-shrink: 0;
 }
-.layer-toggle label {
-  font-size: 12px; color: rgba(0,0,0,0.65); cursor: pointer;
-}
-.layer-toggle .dot {
-  width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
-}
+.layer-toggle label { font-size: 12px; color: rgba(0,0,0,0.65); cursor: pointer; }
+.layer-toggle .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
 
-/* ── FIELD GUIDE ────────────────────────────────────────────── */
 .guide-item {
   margin: 4px 0; padding: 4px 0; border-bottom: 1px solid rgba(0,0,0,0.06);
   font-size: 11.5px; line-height: 1.5; color: rgba(0,0,0,0.55);
 }
 .guide-item:last-child { border-bottom: none; }
-.guide-code { font-weight: 700; }
 
 /* ── POPUP ──────────────────────────────────────────────────── */
 .leaflet-popup-content-wrapper {
@@ -1405,45 +1426,44 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Ar
 }
 .leaflet-popup-content { margin: 12px 14px !important; font-family: inherit !important; }
 .leaflet-popup-tip { background: rgba(255,255,255,0.96) !important; }
-.popup-title { font-weight: 700; font-size: 14px; margin-bottom: 2px; color: #111; }
-.popup-sub { font-size: 11px; color: rgba(0,0,0,0.40); margin-bottom: 6px; }
 .popup-badge {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 3px 10px; border-radius: 6px; margin-bottom: 6px;
 }
+.popup-sub { font-size: 11px; color: rgba(0,0,0,0.40); margin-bottom: 6px; }
 .popup-field { font-size: 12px; color: rgba(0,0,0,0.60); line-height: 1.5; }
 .popup-field strong { color: rgba(0,0,0,0.80); font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; }
 
 /* ── LABEL ICONS ────────────────────────────────────────────── */
 .label-icon {
   font-size: 10.5px; font-weight: 700; color: #111;
-  background: rgba(255,255,255,0.80); padding: 1px 5px; border-radius: 3px;
+  background: rgba(255,255,255,0.82); padding: 1px 5px; border-radius: 3px;
   border: 1px solid rgba(0,0,0,0.15); white-space: nowrap;
   box-shadow: 0 1px 3px rgba(0,0,0,0.12);
 }
 
 /* ── GPS BUTTON ─────────────────────────────────────────────── */
 .gps-btn {
-  background: rgba(255,255,255,0.92); backdrop-filter: blur(10px);
-  border: 1px solid rgba(0,0,0,0.08); border-radius: 10px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.10);
-  width: 40px; height: 40px; cursor: pointer;
+  border-radius: 10px; width: 40px; height: 40px; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   font-size: 20px; color: rgba(0,0,0,0.50);
 }
 .gps-btn:hover { background: rgba(255,255,255,1); color: #1b9e77; }
 
-/* ── SCALE BAR (match panel style) ──────────────────────────── */
+/* ── SCALE BAR ──────────────────────────────────────────────── */
 .leaflet-control-scale-line {
   background: rgba(255,255,255,0.85) !important;
   border-color: rgba(0,0,0,0.25) !important;
   font-size: 10px !important; color: rgba(0,0,0,0.55) !important;
 }
 
-/* ── MOBILE ─────────────────────────────────────────────────── */
+/* ── RESPONSIVE ─────────────────────────────────────────────── */
 @media (max-width: 640px) {
-  #panels { top: auto; bottom: 12px; right: 8px; left: 8px; width: auto; }
-  .panel-body { max-height: 40vh; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  #sidebar { display: none !important; }
+  #sheet { display: block; }
+}
+@media (min-width: 641px) {
+  #sheet { display: none !important; }
 }
 
 </style>
@@ -1458,37 +1478,49 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Ar
 </head>
 <body>
 <div id="map"></div>
-<div id="panels">
-  <div class="panel">
+
+<!-- DESKTOP: sidebar panels (hidden on mobile) -->
+<div id="sidebar">
+  <div class="panel glass">
     <div class="panel-header" onclick="togglePanel(this)">
       <span class="panel-title">Pollardstown Fen</span>
       <span class="toggle-icon">−</span>
     </div>
     <div class="panel-body">
       <p><strong>30 ecotope polygons</strong> across <strong>7 Fossitt classes</strong>. Survey year 2019.</p>
-      <p>Ground-truthing field reference. Tap a polygon for habitat ID tips. Use the GPS button to show your location.</p>
+      <p>Tap a polygon for habitat ID tips. GPS button shows your location.</p>
     </div>
   </div>
-  <div class="panel">
+  <div class="panel glass">
     <div class="panel-header" onclick="togglePanel(this)">
       <span class="panel-title">Layers</span>
       <span class="toggle-icon">−</span>
     </div>
-    <div class="panel-body" id="body-layers"></div>
+    <div class="panel-body" id="desk-layers"></div>
   </div>
-  <div class="panel">
+  <div class="panel glass">
     <div class="panel-header" onclick="togglePanel(this)">
       <span class="panel-title">Habitat Classes</span>
       <span class="toggle-icon">−</span>
     </div>
-    <div class="panel-body"><div class="legend-grid" id="body-legend"></div></div>
+    <div class="panel-body" id="desk-legend"></div>
   </div>
-  <div class="panel">
+  <div class="panel glass">
     <div class="panel-header" onclick="togglePanel(this)">
       <span class="panel-title">Field ID Guide</span>
       <span class="toggle-icon">+</span>
     </div>
-    <div class="panel-body collapsed" id="body-guide"></div>
+    <div class="panel-body collapsed" id="desk-guide"></div>
+  </div>
+</div>
+
+<!-- MOBILE: bottom sheet (hidden on desktop) -->
+<div id="sheet" class="glass collapsed">
+  <div id="sheet-handle" onclick="document.getElementById('sheet').classList.toggle('collapsed')"></div>
+  <div id="sheet-scroll">
+    <div class="sheet-section"><div class="sheet-heading">Layers</div><div id="mob-layers"></div></div>
+    <div class="sheet-section"><div class="sheet-heading">Habitat Classes</div><div id="mob-legend"></div></div>
+    <div class="sheet-section"><div class="sheet-heading">Field ID Guide</div><div id="mob-guide"></div></div>
   </div>
 </div>
 
@@ -1500,7 +1532,7 @@ var trainPts = [{"lat": 53.19511657508471, "lon": -6.846937904150436, "cls": "FS
 var testPts = [{"lat": 53.195120902037736, "lon": -6.850897349660362, "cls": "FS1"}, {"lat": 53.19407514232902, "lon": -6.846160481248029, "cls": "FS1"}, {"lat": 53.19483725908585, "lon": -6.852322525527662, "cls": "FS1"}, {"lat": 53.19290100946108, "lon": -6.8479671096781525, "cls": "FS1"}, {"lat": 53.19488320313628, "lon": -6.852991325107621, "cls": "FS1"}, {"lat": 53.19530107535982, "lon": -6.848633919966741, "cls": "FS1"}, {"lat": 53.193940080535704, "lon": -6.848886689785458, "cls": "FS1"}, {"lat": 53.193300582740704, "lon": -6.849857975157644, "cls": "FS1"}, {"lat": 53.19563481338945, "lon": -6.848548607212531, "cls": "FS1"}, {"lat": 53.19374123770561, "lon": -6.847612978554113, "cls": "FS1"}, {"lat": 53.195188460876, "lon": -6.848514991867553, "cls": "FS1"}, {"lat": 53.19362231510162, "lon": -6.8497547264402145, "cls": "FS1"}, {"lat": 53.195838866621635, "lon": -6.850260973007198, "cls": "FS1"}, {"lat": 53.194594608058615, "lon": -6.849088569352483, "cls": "FS1"}, {"lat": 53.19445017486521, "lon": -6.851922727259487, "cls": "FS1"}, {"lat": 53.19521973699484, "lon": -6.8498994778891, "cls": "FS1"}, {"lat": 53.1927263925744, "lon": -6.847863324832472, "cls": "FS1"}, {"lat": 53.19526517392147, "lon": -6.8501106358365185, "cls": "FS1"}, {"lat": 53.193234233104235, "lon": -6.847639941261644, "cls": "FS1"}, {"lat": 53.195362997292584, "lon": -6.852810632456169, "cls": "FS1"}, {"lat": 53.19512124418106, "lon": -6.853208706659361, "cls": "FS1"}, {"lat": 53.19533955403575, "lon": -6.849988135814082, "cls": "FS1"}, {"lat": 53.194910184193155, "lon": -6.849376673738144, "cls": "FS1"}, {"lat": 53.19417722333927, "lon": -6.845101196658793, "cls": "FS1"}, {"lat": 53.19553688087765, "lon": -6.852593773706606, "cls": "FS1"}, {"lat": 53.19559436490937, "lon": -6.852381376313231, "cls": "FS1"}, {"lat": 53.19600411217603, "lon": -6.846886733792439, "cls": "FS1"}, {"lat": 53.19601731224944, "lon": -6.846748210957032, "cls": "FS1"}, {"lat": 53.19591796851033, "lon": -6.850116228521065, "cls": "FS1"}, {"lat": 53.19658965094281, "lon": -6.850375723404551, "cls": "FS1"}, {"lat": 53.19653528312282, "lon": -6.852037500041126, "cls": "FS1/PF1"}, {"lat": 53.196465117259386, "lon": -6.8522896328436085, "cls": "FS1/PF1"}, {"lat": 53.19614704953089, "lon": -6.85159316782854, "cls": "FS1/PF1"}, {"lat": 53.19670045057841, "lon": -6.8519702308325074, "cls": "FS1/PF1"}, {"lat": 53.19660859025375, "lon": -6.852098894471154, "cls": "FS1/PF1"}, {"lat": 53.196537253882894, "lon": -6.85115844864211, "cls": "FS1/PF1"}, {"lat": 53.19640917631584, "lon": -6.8516998824453115, "cls": "FS1/PF1"}, {"lat": 53.19678673026254, "lon": -6.851918505595014, "cls": "FS1/PF1"}, {"lat": 53.196646722055995, "lon": -6.8523408202741605, "cls": "FS1/PF1"}, {"lat": 53.1967190913191, "lon": -6.85149981180667, "cls": "FS1/PF1"}, {"lat": 53.19648634189717, "lon": -6.851336935035604, "cls": "FS1/PF1"}, {"lat": 53.19674861047019, "lon": -6.8519009557639095, "cls": "FS1/PF1"}, {"lat": 53.19670406796794, "lon": -6.851839492275312, "cls": "FS1/PF1"}, {"lat": 53.19638445719175, "lon": -6.851761009375678, "cls": "FS1/PF1"}, {"lat": 53.1963292447446, "lon": -6.851718600370792, "cls": "FS1/PF1"}, {"lat": 53.19647011007359, "lon": -6.8511837631958645, "cls": "FS1/PF1"}, {"lat": 53.19650624885928, "lon": -6.851860721867973, "cls": "FS1/PF1"}, {"lat": 53.19635058991845, "lon": -6.851410439081551, "cls": "FS1/PF1"}, {"lat": 53.19649468991944, "lon": -6.851420818168513, "cls": "FS1/PF1"}, {"lat": 53.196653975473204, "lon": -6.852109147622956, "cls": "FS1/PF1"}, {"lat": 53.19670834950828, "lon": -6.851933249271082, "cls": "FS1/PF1"}, {"lat": 53.19621341720135, "lon": -6.851098018717827, "cls": "FS1/PF1"}, {"lat": 53.19663859178411, "lon": -6.852145415465491, "cls": "FS1/PF1"}, {"lat": 53.19657097227504, "lon": -6.851232458757818, "cls": "FS1/PF1"}, {"lat": 53.19650007915758, "lon": -6.851282979119774, "cls": "FS1/PF1"}, {"lat": 53.19639920005106, "lon": -6.851491739349365, "cls": "FS1/PF1"}, {"lat": 53.19679757127246, "lon": -6.85170734033742, "cls": "FS1/PF1"}, {"lat": 53.19654133084595, "lon": -6.852289481984673, "cls": "FS1/PF1"}, {"lat": 53.196553289910774, "lon": -6.8516320766617484, "cls": "FS1/PF1"}, {"lat": 53.19651204687122, "lon": -6.850838740428975, "cls": "FS1/PF1"}, {"lat": 53.19590799012446, "lon": -6.844016084449492, "cls": "GS4"}, {"lat": 53.19653615040585, "lon": -6.849376550283445, "cls": "GS4"}, {"lat": 53.19663969770128, "lon": -6.846390291726438, "cls": "GS4"}, {"lat": 53.19615009337992, "lon": -6.844408786128573, "cls": "GS4"}, {"lat": 53.19747861538042, "lon": -6.849606419462386, "cls": "GS4"}, {"lat": 53.196531318179694, "lon": -6.848666400469348, "cls": "GS4"}, {"lat": 53.19493659226944, "lon": -6.845138801989896, "cls": "GS4"}, {"lat": 53.19732978327401, "lon": -6.848836616490825, "cls": "GS4"}, {"lat": 53.19624548877908, "lon": -6.849045353453186, "cls": "GS4"}, {"lat": 53.19677008470229, "lon": -6.847542819514767, "cls": "GS4"}, {"lat": 53.196816157700134, "lon": -6.850015283075849, "cls": "GS4"}, {"lat": 53.196603887117085, "lon": -6.847475494037712, "cls": "GS4"}, {"lat": 53.19676589094129, "lon": -6.849897494309371, "cls": "GS4"}, {"lat": 53.19585048495609, "lon": -6.84420885926346, "cls": "GS4"}, {"lat": 53.19596339453074, "lon": -6.844901408003875, "cls": "GS4"}, {"lat": 53.19489687797558, "lon": -6.844757521763188, "cls": "GS4"}, {"lat": 53.19676508154615, "lon": -6.846555157800901, "cls": "GS4"}, {"lat": 53.19744254025701, "lon": -6.848464830975848, "cls": "GS4"}, {"lat": 53.196133864538744, "lon": -6.847299280125306, "cls": "GS4"}, {"lat": 53.19766896955383, "lon": -6.849633635354803, "cls": "GS4"}, {"lat": 53.196312684348364, "lon": -6.844847092000482, "cls": "GS4"}, {"lat": 53.19659400086532, "lon": -6.849077807642953, "cls": "GS4"}, {"lat": 53.195419991461655, "lon": -6.845619876922063, "cls": "GS4"}, {"lat": 53.19684382904447, "lon": -6.850192998814418, "cls": "GS4"}, {"lat": 53.19634979774791, "lon": -6.844820523805677, "cls": "GS4"}, {"lat": 53.19542198304291, "lon": -6.845064970793216, "cls": "GS4"}, {"lat": 53.19592132823642, "lon": -6.8446887771619185, "cls": "GS4"}, {"lat": 53.19586640541958, "lon": -6.845788938840912, "cls": "GS4"}, {"lat": 53.1969464376823, "lon": -6.8480608293591985, "cls": "GS4"}, {"lat": 53.19645169970418, "lon": -6.845521581934248, "cls": "GS4"}, {"lat": 53.197174188404354, "lon": -6.850364749379986, "cls": "PF1"}, {"lat": 53.196333777484014, "lon": -6.852334302556725, "cls": "PF1"}, {"lat": 53.1971880167355, "lon": -6.850021729070619, "cls": "PF1"}, {"lat": 53.19595945804398, "lon": -6.845901998258364, "cls": "PF1"}, {"lat": 53.19608415115965, "lon": -6.852698204026507, "cls": "PF1"}, {"lat": 53.19705040602634, "lon": -6.849566421591489, "cls": "PF1"}, {"lat": 53.19617520021316, "lon": -6.852651065744158, "cls": "PF1"}, {"lat": 53.1960672615338, "lon": -6.853598291147471, "cls": "PF1"}, {"lat": 53.19435187611995, "lon": -6.844651838905148, "cls": "PF1"}, {"lat": 53.19546305094096, "lon": -6.853913780894388, "cls": "PF1"}, {"lat": 53.195004532814856, "lon": -6.853772606964671, "cls": "PF1"}, {"lat": 53.195127298111906, "lon": -6.84594162459321, "cls": "PF1"}, {"lat": 53.1943625588952, "lon": -6.844326152337879, "cls": "PF1"}, {"lat": 53.19709531239925, "lon": -6.849592587686681, "cls": "PF1"}, {"lat": 53.19594355979625, "lon": -6.854359540133588, "cls": "PF1"}, {"lat": 53.1938050408156, "lon": -6.84625235894937, "cls": "PF1"}, {"lat": 53.19655445298899, "lon": -6.84847230107091, "cls": "PF1"}, {"lat": 53.193512011230666, "lon": -6.8465996743956, "cls": "PF1"}, {"lat": 53.197235028317735, "lon": -6.850449826913157, "cls": "PF1"}, {"lat": 53.195419882228485, "lon": -6.854030778558729, "cls": "PF1"}, {"lat": 53.19520930082753, "lon": -6.845939548851647, "cls": "PF1"}, {"lat": 53.19600764859186, "lon": -6.846028395056947, "cls": "PF1"}, {"lat": 53.196108195850265, "lon": -6.852550797703389, "cls": "PF1"}, {"lat": 53.19388733569309, "lon": -6.8455405620910295, "cls": "PF1"}, {"lat": 53.19559487677693, "lon": -6.854304708963875, "cls": "PF1"}, {"lat": 53.193540349618885, "lon": -6.846239240350265, "cls": "PF1"}, {"lat": 53.19559880575644, "lon": -6.846565192442956, "cls": "PF1"}, {"lat": 53.195420436438205, "lon": -6.854628995019734, "cls": "PF1"}, {"lat": 53.19453640000787, "lon": -6.853392468869237, "cls": "PF1"}, {"lat": 53.19682733739849, "lon": -6.848385506911997, "cls": "PF1"}, {"lat": 53.19548515846935, "lon": -6.855050478676593, "cls": "WL2"}, {"lat": 53.19433474740596, "lon": -6.853479401658719, "cls": "WL2"}, {"lat": 53.19509532132428, "lon": -6.854511955111947, "cls": "WL2"}, {"lat": 53.19505114294568, "lon": -6.854543692392567, "cls": "WL2"}, {"lat": 53.195397195803096, "lon": -6.8549845599381145, "cls": "WL2"}, {"lat": 53.195323427743425, "lon": -6.854867233395077, "cls": "WL2"}, {"lat": 53.19427266509447, "lon": -6.853326080159433, "cls": "WL2"}, {"lat": 53.19561931089378, "lon": -6.855110243605466, "cls": "WL2"}, {"lat": 53.1943184918663, "lon": -6.853448691937774, "cls": "WL2"}, {"lat": 53.19557813268708, "lon": -6.855147927452335, "cls": "WL2"}, {"lat": 53.195420747214975, "lon": -6.854916268035828, "cls": "WL2"}, {"lat": 53.19546055603718, "lon": -6.8550096846702875, "cls": "WL2"}, {"lat": 53.195721305233555, "lon": -6.855146040934001, "cls": "WL2"}, {"lat": 53.194634731087035, "lon": -6.8539122942576824, "cls": "WL2"}, {"lat": 53.195547776343375, "lon": -6.855225197235121, "cls": "WL2"}, {"lat": 53.19573718616739, "lon": -6.855356149343807, "cls": "WL2"}, {"lat": 53.195411257423736, "lon": -6.854875442654697, "cls": "WL2"}, {"lat": 53.194503593344905, "lon": -6.853764927198764, "cls": "WL2"}, {"lat": 53.194392883518816, "lon": -6.853498627819372, "cls": "WL2"}, {"lat": 53.19572354932015, "lon": -6.85521724453353, "cls": "WL2"}, {"lat": 53.19546098049048, "lon": -6.855089921353499, "cls": "WL2"}, {"lat": 53.195727338005206, "lon": -6.855284773307449, "cls": "WL2"}, {"lat": 53.19556951095816, "lon": -6.85507646087842, "cls": "WL2"}, {"lat": 53.194504359740975, "lon": -6.853884174218558, "cls": "WL2"}, {"lat": 53.19441236333237, "lon": -6.853717772163128, "cls": "WL2"}, {"lat": 53.19569912781174, "lon": -6.855126254782345, "cls": "WL2"}, {"lat": 53.19523122526462, "lon": -6.854746927789457, "cls": "WL2"}, {"lat": 53.19524250834591, "lon": -6.854778884094755, "cls": "WL2"}, {"lat": 53.19561647931444, "lon": -6.855212941725421, "cls": "WL2"}, {"lat": 53.19461859054956, "lon": -6.854071397347577, "cls": "WL2"}, {"lat": 53.194799575954896, "lon": -6.843123680471493, "cls": "WN6"}, {"lat": 53.195091020274425, "lon": -6.843747286248726, "cls": "WN6"}, {"lat": 53.19486335462001, "lon": -6.84316684947205, "cls": "WN6"}, {"lat": 53.194987340895615, "lon": -6.8442326606500465, "cls": "WN6"}, {"lat": 53.19499035459074, "lon": -6.843177687974608, "cls": "WN6"}, {"lat": 53.19491203910265, "lon": -6.843271974787598, "cls": "WN6"}, {"lat": 53.195374630484224, "lon": -6.843587513020457, "cls": "WN6"}, {"lat": 53.195307127950464, "lon": -6.843680634150911, "cls": "WN6"}, {"lat": 53.19502074421007, "lon": -6.8441625608203465, "cls": "WN6"}, {"lat": 53.195154422742384, "lon": -6.843592300996638, "cls": "WN6"}, {"lat": 53.19519410202063, "lon": -6.843995758403377, "cls": "WN6"}, {"lat": 53.19369526564812, "lon": -6.851750222446302, "cls": "WN6"}, {"lat": 53.19479060565802, "lon": -6.843547720615924, "cls": "WN6"}, {"lat": 53.193605250553205, "lon": -6.851077536599339, "cls": "WN6"}, {"lat": 53.19416486707782, "lon": -6.852941100742161, "cls": "WN6"}, {"lat": 53.19415434812322, "lon": -6.852872440735067, "cls": "WN6"}, {"lat": 53.19520651494561, "lon": -6.843647244227069, "cls": "WN6"}, {"lat": 53.19499582948324, "lon": -6.844027480314537, "cls": "WN6"}, {"lat": 53.19522510321195, "lon": -6.8434875085847695, "cls": "WN6"}, {"lat": 53.1937406190881, "lon": -6.851545044826864, "cls": "WN6"}, {"lat": 53.1951343704048, "lon": -6.8432578904578145, "cls": "WN6"}, {"lat": 53.19512171761707, "lon": -6.843321766661856, "cls": "WN6"}, {"lat": 53.195114367655236, "lon": -6.843531229822285, "cls": "WN6"}, {"lat": 53.19539746094505, "lon": -6.84378377038421, "cls": "WN6"}, {"lat": 53.19418666603587, "lon": -6.853052300020094, "cls": "WN6"}, {"lat": 53.19536738061419, "lon": -6.843883305545769, "cls": "WN6"}, {"lat": 53.19495877614254, "lon": -6.8444485454699935, "cls": "WN6"}, {"lat": 53.19510248446504, "lon": -6.8441380217970496, "cls": "WN6"}, {"lat": 53.19400586360739, "lon": -6.852513736525352, "cls": "WN6"}, {"lat": 53.19504363562187, "lon": -6.843374366697709, "cls": "WN6"}, {"lat": 53.196566012406734, "lon": -6.8467771258746835, "cls": "WS1"}, {"lat": 53.19657660724826, "lon": -6.84676463959008, "cls": "WS1"}, {"lat": 53.19696548772452, "lon": -6.846765711304313, "cls": "WS1"}, {"lat": 53.196770199120195, "lon": -6.846577034142251, "cls": "WS1"}, {"lat": 53.1970971304792, "lon": -6.847189612234308, "cls": "WS1"}, {"lat": 53.19692245972198, "lon": -6.846876481599683, "cls": "WS1"}, {"lat": 53.19657760540635, "lon": -6.846673652842915, "cls": "WS1"}, {"lat": 53.196965985845665, "lon": -6.847003707715999, "cls": "WS1"}, {"lat": 53.196806661535476, "lon": -6.846970437841688, "cls": "WS1"}, {"lat": 53.19696265252012, "lon": -6.846965287661144, "cls": "WS1"}, {"lat": 53.19666693840541, "lon": -6.846823135066183, "cls": "WS1"}, {"lat": 53.1968935055527, "lon": -6.8468936345294535, "cls": "WS1"}, {"lat": 53.19688058919005, "lon": -6.846994852387952, "cls": "WS1"}, {"lat": 53.19689090039253, "lon": -6.84698726496322, "cls": "WS1"}, {"lat": 53.19658303632586, "lon": -6.846778167121939, "cls": "WS1"}, {"lat": 53.19660032887053, "lon": -6.8467445525182375, "cls": "WS1"}, {"lat": 53.19691759840811, "lon": -6.847120517182149, "cls": "WS1"}, {"lat": 53.19688249467965, "lon": -6.846619634477866, "cls": "WS1"}, {"lat": 53.19661136427385, "lon": -6.846757415156406, "cls": "WS1"}, {"lat": 53.19696100092894, "lon": -6.8468278774284315, "cls": "WS1"}, {"lat": 53.19674130530321, "lon": -6.846828582328843, "cls": "WS1"}, {"lat": 53.19692449210309, "lon": -6.84672179516382, "cls": "WS1"}, {"lat": 53.19681731004254, "lon": -6.846680153529055, "cls": "WS1"}, {"lat": 53.19678264770192, "lon": -6.846589895803038, "cls": "WS1"}, {"lat": 53.196831341022005, "lon": -6.846956661255847, "cls": "WS1"}, {"lat": 53.19703200143133, "lon": -6.847026390811478, "cls": "WS1"}, {"lat": 53.1967139813774, "lon": -6.8468522948818205, "cls": "WS1"}, {"lat": 53.196884287385956, "lon": -6.84689354448077, "cls": "WS1"}, {"lat": 53.19684345522883, "lon": -6.846829190993156, "cls": "WS1"}, {"lat": 53.19678904090422, "lon": -6.846771988895502, "cls": "WS1"}];
 var CENTER = [53.19540467825468,-6.848219647543011];
 
-// ── PANEL TOGGLE ────────────────────────────────────────────────
+// ── PANEL TOGGLE (desktop only) ─────────────────────────────────
 function togglePanel(hdr) {
   var body = hdr.nextElementSibling;
   var icon = hdr.querySelector('.toggle-icon');
@@ -1512,7 +1544,6 @@ var map = L.map('map', {zoomControl: false}).setView(CENTER, 16);
 L.control.zoom({position: 'topleft'}).addTo(map);
 L.control.scale({imperial: false, position: 'bottomleft', maxWidth: 150}).addTo(map);
 
-// basemaps
 var satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
   maxZoom: 19, attribution: 'Esri'
 });
@@ -1535,17 +1566,15 @@ var polyLayer = L.geoJSON(geojsonData, {
       '<span style="font-size:11px;color:rgba(0,0,0,0.5);">' + (m.label||'') + '</span></div>' +
       '<div class="popup-sub">Polygon ' + feat.properties.poly_id + '</div>' +
       '<div class="popup-field"><strong>What to look for</strong><br>' + (m.field||'') + '</div>';
-    layer.bindPopup(h, {maxWidth: 270, className: ''});
+    layer.bindPopup(h, {maxWidth: 260, className: ''});
   }
 }).addTo(map);
 
-// ── OUTLINE-ONLY LAYER ──────────────────────────────────────────
 var outlineLayer = L.geoJSON(geojsonData, {
   style: {fillColor: 'transparent', fillOpacity: 0, color: '#d00', weight: 2, dashArray: '6,4', opacity: 0.8},
   interactive: false
 });
 
-// ── LABEL LAYER ─────────────────────────────────────────────────
 var labelGroup = L.layerGroup();
 labelData.forEach(function(lbl) {
   L.marker([lbl.lat, lbl.lon], {
@@ -1556,7 +1585,6 @@ labelData.forEach(function(lbl) {
 });
 labelGroup.addTo(map);
 
-// ── TRAINING POINTS ─────────────────────────────────────────────
 var trainGroup = L.layerGroup();
 trainPts.forEach(function(p) {
   L.circleMarker([p.lat, p.lon], {
@@ -1564,7 +1592,6 @@ trainPts.forEach(function(p) {
   }).bindTooltip('Train — ' + p.cls, {sticky: true}).addTo(trainGroup);
 });
 
-// ── TEST POINTS ─────────────────────────────────────────────────
 var testGroup = L.layerGroup();
 testPts.forEach(function(p) {
   L.circleMarker([p.lat, p.lon], {
@@ -1574,71 +1601,81 @@ testPts.forEach(function(p) {
 
 // ── LAYER DEFINITIONS ───────────────────────────────────────────
 var LAYERS = [
-  {id: 'sat',     label: 'Satellite basemap',   layer: satellite,    on: true,  dot: null},
-  {id: 'street',  label: 'Street basemap',      layer: osm,          on: false, dot: null},
-  {id: 'poly',    label: 'Ecotope polygons',     layer: polyLayer,    on: true,  dot: null},
-  {id: 'outline', label: 'Polygon outlines only',layer: outlineLayer, on: false, dot: '#d00'},
-  {id: 'labels',  label: 'Class labels',         layer: labelGroup,   on: true,  dot: null},
-  {id: 'train',   label: 'Training points',      layer: trainGroup,   on: false, dot: '#f5c542'},
-  {id: 'test',    label: 'Validation points',    layer: testGroup,    on: false, dot: '#00e5ff'},
+  {id: 'sat',     label: 'Satellite basemap',    layer: satellite,    on: true,  dot: null},
+  {id: 'street',  label: 'Street basemap',       layer: osm,          on: false, dot: null},
+  {id: 'poly',    label: 'Ecotope polygons',      layer: polyLayer,    on: true,  dot: null},
+  {id: 'outline', label: 'Polygon outlines only', layer: outlineLayer, on: false, dot: '#d00'},
+  {id: 'labels',  label: 'Class labels',          layer: labelGroup,   on: true,  dot: null},
+  {id: 'train',   label: 'Training points',       layer: trainGroup,   on: false, dot: '#f5c542'},
+  {id: 'test',    label: 'Validation points',     layer: testGroup,    on: false, dot: '#00e5ff'},
 ];
 
-// build layer toggle UI
-var layerDiv = document.getElementById('body-layers');
-LAYERS.forEach(function(l) {
-  var row = document.createElement('div');
-  row.className = 'layer-toggle';
-  var cb = document.createElement('input');
-  cb.type = 'checkbox'; cb.checked = l.on; cb.id = 'cb-' + l.id;
-  cb.onchange = function() {
-    if (this.checked) { map.addLayer(l.layer); }
-    else { map.removeLayer(l.layer); }
-    // radio behaviour for basemaps
-    if (l.id === 'sat' && this.checked) {
-      document.getElementById('cb-street').checked = false;
-      map.removeLayer(osm);
+// render layer toggles into a container
+function buildLayerToggles(container) {
+  LAYERS.forEach(function(l) {
+    var row = document.createElement('div');
+    row.className = 'layer-toggle';
+    var cb = document.createElement('input');
+    cb.type = 'checkbox'; cb.checked = l.on;
+    cb.className = 'lyr-cb-' + l.id;
+    cb.onchange = function() {
+      // sync all checkboxes with same class
+      document.querySelectorAll('.lyr-cb-' + l.id).forEach(function(c) { c.checked = cb.checked; });
+      if (cb.checked) map.addLayer(l.layer); else map.removeLayer(l.layer);
+      if (l.id === 'sat' && cb.checked) {
+        document.querySelectorAll('.lyr-cb-street').forEach(function(c) { c.checked = false; });
+        map.removeLayer(osm);
+      }
+      if (l.id === 'street' && cb.checked) {
+        document.querySelectorAll('.lyr-cb-sat').forEach(function(c) { c.checked = false; });
+        map.removeLayer(satellite);
+      }
+    };
+    var lbl = document.createElement('label');
+    lbl.textContent = l.label;
+    row.appendChild(cb);
+    if (l.dot) {
+      var d = document.createElement('span');
+      d.className = 'dot'; d.style.background = l.dot;
+      row.appendChild(d);
     }
-    if (l.id === 'street' && this.checked) {
-      document.getElementById('cb-sat').checked = false;
-      map.removeLayer(satellite);
-    }
-  };
-  var lbl = document.createElement('label');
-  lbl.htmlFor = 'cb-' + l.id;
-  lbl.textContent = l.label;
-  row.appendChild(cb);
-  if (l.dot) {
-    var d = document.createElement('span');
-    d.className = 'dot';
-    d.style.background = l.dot;
-    row.appendChild(d);
+    row.appendChild(lbl);
+    container.appendChild(row);
+  });
+}
+
+// render legend into a container
+function buildLegend(container) {
+  for (var cls in classMeta) {
+    var m = classMeta[cls];
+    container.innerHTML += '<div class="legend-row">' +
+      '<span class="legend-swatch" style="background:' + m.color + ';border-color:' + m.edge + ';"></span>' +
+      '<span class="legend-lbl"><strong>' + cls + '</strong> — ' + m.label + '</span></div>';
   }
-  row.appendChild(lbl);
-  layerDiv.appendChild(row);
-});
-
-// ── BUILD LEGEND ────────────────────────────────────────────────
-var legDiv = document.getElementById('body-legend');
-for (var cls in classMeta) {
-  var m = classMeta[cls];
-  legDiv.innerHTML += '<div class="legend-row">' +
-    '<span class="legend-swatch" style="background:' + m.color + ';border-color:' + m.edge + ';"></span>' +
-    '<span class="legend-lbl"><strong>' + cls + '</strong> — ' + m.label + '</span></div>';
 }
 
-// ── BUILD FIELD GUIDE ───────────────────────────────────────────
-var guideDiv = document.getElementById('body-guide');
-for (var cls in classMeta) {
-  var m = classMeta[cls];
-  guideDiv.innerHTML += '<div class="guide-item"><span class="guide-code" style="color:' + m.edge + ';">' +
-    cls + '</span> — ' + m.field + '</div>';
+// render field guide into a container
+function buildGuide(container) {
+  for (var cls in classMeta) {
+    var m = classMeta[cls];
+    container.innerHTML += '<div class="guide-item"><span style="font-weight:700;color:' + m.edge + ';">' +
+      cls + '</span> — ' + m.field + '</div>';
+  }
 }
+
+// populate both desktop + mobile
+buildLayerToggles(document.getElementById('desk-layers'));
+buildLayerToggles(document.getElementById('mob-layers'));
+buildLegend(document.getElementById('desk-legend'));
+buildLegend(document.getElementById('mob-legend'));
+buildGuide(document.getElementById('desk-guide'));
+buildGuide(document.getElementById('mob-guide'));
 
 // ── GPS LOCATE ──────────────────────────────────────────────────
 var gpsCtrl = L.control({position: 'topleft'});
 var gpsMarker = null, gpsCircle = null;
 gpsCtrl.onAdd = function() {
-  var btn = L.DomUtil.create('div', 'gps-btn');
+  var btn = L.DomUtil.create('div', 'gps-btn glass');
   btn.innerHTML = '◎';
   btn.title = 'Show my location';
   L.DomEvent.disableClickPropagation(btn);
@@ -1652,7 +1689,6 @@ gpsCtrl.onAdd = function() {
       gpsCircle = L.circle([lat, lng], {radius: acc, color: '#1b9e77', fillOpacity: 0.08, weight: 1}).addTo(map);
       map.setView([lat, lng], 18);
       gpsMarker.bindPopup('You are here<br>Accuracy: ' + Math.round(acc) + ' m').openPopup();
-      btn.style.color = '#1b9e77';
     }, function(err) {
       alert('Location error: ' + err.message);
       btn.style.color = 'rgba(0,0,0,0.50)';
@@ -1662,25 +1698,13 @@ gpsCtrl.onAdd = function() {
 };
 gpsCtrl.addTo(map);
 
-// fit view
 map.fitBounds(polyLayer.getBounds().pad(0.05));
 
-// collapse panels on mobile
-if (window.innerWidth <= 640) {
-  document.querySelectorAll('.panel-body:not(.collapsed)').forEach(function(b) {
-    // keep layers panel open, collapse rest
-    if (b.id !== 'body-layers') {
-      b.classList.add('collapsed');
-      b.previousElementSibling.querySelector('.toggle-icon').textContent = '+';
-    }
-  });
-}
-
-// ── SERVICE WORKER REGISTRATION ─────────────────────────────────
+// ── SERVICE WORKER ──────────────────────────────────────────────
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js').then(function(reg) {
-    console.log('SW registered, scope:', reg.scope);
-  }).catch(function(err) { console.log('SW failed:', err); });
+  navigator.serviceWorker.register('sw.js').then(function(r) {
+    console.log('SW registered');
+  }).catch(function(e) { console.log('SW failed:', e); });
 }
 
 </script>
